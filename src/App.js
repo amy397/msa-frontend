@@ -1,23 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
+import Navbar from './components/Navbar';
+import UserList from './pages/UserList';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <RecoilRoot>
+      <BrowserRouter>
+        <div className="min-h-screen bg-gray-100">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/users" element={<UserList />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </RecoilRoot>
+  );
+}
+
+// 홈 페이지
+function Home() {
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold text-center">🛒 MSA Shop</h1>
+      <p className="text-center text-gray-600 mt-4">회원 / 상품 / 주문 관리 시스템</p>
     </div>
   );
 }
