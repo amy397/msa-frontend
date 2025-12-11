@@ -1,34 +1,34 @@
 import { atom, selector } from 'recoil';
 
-// 유저 목록 상태
-export const usersState = atom({
-  key: 'usersState',
+// 주문 목록 상태
+export const ordersState = atom({
+  key: 'ordersState',
   default: [],
 });
 
 // 로딩 상태
-export const usersLoadingState = atom({
-  key: 'usersLoadingState',
+export const ordersLoadingState = atom({
+  key: 'ordersLoadingState',
   default: false,
 });
 
 // 에러 상태
-export const usersErrorState = atom({
-  key: 'usersErrorState',
+export const ordersErrorState = atom({
+  key: 'ordersErrorState',
   default: null,
 });
 
-// 선택된 유저
-export const selectedUserState = atom({
-  key: 'selectedUserState',
+// 선택된 주문
+export const selectedOrderState = atom({
+  key: 'selectedOrderState',
   default: null,
 });
 
-// 유저 수 (파생 상태)
-export const usersCountState = selector({
-  key: 'usersCountState',
+// 주문 수 (파생 상태)
+export const ordersCountState = selector({
+  key: 'ordersCountState',
   get: ({ get }) => {
-    const users = get(usersState);
-    return users.length;
+    const orders = get(ordersState);
+    return orders.length;
   },
 });

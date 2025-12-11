@@ -1,4 +1,4 @@
-javascriptimport { useRecoilState } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { useCallback } from 'react';
 import { usersState, usersLoadingState, usersErrorState } from '../recoil/userState';
 import { userApi } from '../api/userApi';

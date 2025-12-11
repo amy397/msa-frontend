@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
 import Navbar from './components/Navbar';
 import UserList from './pages/UserList';
+import ProductList from './pages/ProductList';
+import OrderList from './pages/OrderList';
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/users" element={<UserList />} />
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/orders" element={<OrderList />} />
           </Routes>
         </div>
       </BrowserRouter>
