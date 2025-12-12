@@ -4,60 +4,43 @@ import { useAuthStore } from '../stores/authStore';
 
 function MyProfile() {
   const navigate = useNavigate();
-  const { user, userId, userEmail, isAuthenticated, loading, error, fetchMyProfile } = useAuthStore();
+  const { userEmail, userRole, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
-      return;
     }
-    fetchMyProfile();
-  }, [isAuthenticated, navigate, fetchMyProfile]);
+  }, [isAuthenticated, navigate]);
 
   if (!isAuthenticated) {
     return null;
   }
-
-  if (loading) return <div className="text-center p-4">로딩중...</div>;
-  if (error) return <div className="text-red-500 p-4 text-center">{error}</div>;
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">내 정보</h1>
 
       <div className="bg-white rounded-lg shadow p-6">
-        {user ? (
-          <div className="space-y-4">
-            <div className="flex border-b pb-3">
-              <span className="w-24 text-gray-500">이름</span>
-              <span className="font-medium">{user.name}</span>
-            </div>
-            <div className="flex border-b pb-3">
-              <span className="w-24 text-gray-500">이메일</span>
-              <span className="font-medium">{user.email}</span>
-            </div>
-            {user.phone && (
-              <div className="flex border-b pb-3">
-                <span className="w-24 text-gray-500">전화번호</span>
-                <span className="font-medium">{user.phone}</span>
-              </div>
-            )}
-            {user.createdAt && (
-              <div className="flex border-b pb-3">
-                <span className="w-24 text-gray-500">가입일</span>
-                <span className="font-medium">
-                  {new Date(user.createdAt).toLocaleDateString('ko-KR')}
-                </span>
-              </div>
-            )}
+        <div className="space-y-4">
+          <div className="flex border-b pb-3">
+            <span className="w-24 text-gray-500">이메일</span>
+            <span className="font-medium">{userEmail}</span>
           </div>
-        ) : (
-          <div className="text-center text-gray-500">
-            <p>사용자 정보를 불러올 수 없습니다.</p>
-            <p className="text-sm mt-2">User ID: {userId}</p>
-            <p className="text-sm">Email: {userEmail}</p>
+          <div className="flex border-b pb-3">
+            <span className="w-24 text-gray-500">권한</span>
+            <span className={`inline-block text-sm px-2 py-1 rounded ${
+              userRole === 'ADMIN' || userRole === 'ROLE_ADMIN'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-blue-100 text-blue-800'
+            }`}>
+              {userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' ? '관리자' : '일반 사용자'}
+            </span>
           </div>
-        )}
+        </div>
+
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+          <p>* 추가 정보(이름, 전화번호 등)를 표시하려면 백엔드에 <code className="bg-gray-200 px-1 rounded">/api/users/me</code> API가 필요합니다.</p>
+        </div>
       </div>
     </div>
   );
