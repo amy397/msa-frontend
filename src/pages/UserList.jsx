@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useUsers } from '../hooks/useUsers';
+import { useUsers } from '../hooks/useUser';
 
 function UserList() {
   const { users, loading, error, fetchUsers, deleteUser } = useUsers();
