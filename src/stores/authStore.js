@@ -56,9 +56,11 @@ export const useAuthStore = create(
 
           // JWT 토큰에서 사용자 정보 추출
           const decoded = decodeToken(accessToken);
-          const userId = decoded?.sub || decoded?.userId || decoded?.id;
+          console.log('🔍 JWT 토큰 내용:', decoded);
+          const userId = decoded?.userId || decoded?.id || decoded?.sub;
           const userEmail = decoded?.email || data.email;
           const userRole = decoded?.role || 'USER';
+          console.log('👤 추출된 userId:', userId, 'email:', userEmail, 'role:', userRole);
 
           set({
             token: accessToken,
@@ -105,13 +107,16 @@ export const useAuthStore = create(
       // 내 정보 조회
       fetchMyProfile: async () => {
         const { userId } = get();
+        console.log('📌 fetchMyProfile 호출, userId:', userId);
         if (!userId) {
           set({ error: '로그인이 필요합니다.', loading: false });
           return { success: false, error: '로그인이 필요합니다.' };
         }
 
         set({ loading: true, error: null });
+        console.log('🚀 API 호출: GET /api/users/' + userId);
         const result = await authApi.getUser(userId);
+        console.log('📨 API 응답:', result);
 
         if (result.success) {
           set({ user: result.data, loading: false });
