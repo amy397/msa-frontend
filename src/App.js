@@ -1,21 +1,18 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { RecoilRoot } from 'recoil';
 import Navbar from './components/Navbar';
 import UserList from './pages/UserList';
 
 function App() {
   return (
-    <RecoilRoot>
-      <BrowserRouter>
-        <div className="min-h-screen bg-gray-100">
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/users" element={<UserList />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </RecoilRoot>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-100">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/users" element={<UserList />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
