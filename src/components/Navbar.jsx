@@ -3,7 +3,9 @@ import { useAuthStore } from '../stores/authStore';
 
 function Navbar() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, userRole, logout } = useAuthStore();
+
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ROLE_ADMIN';
 
   const handleLogout = () => {
     logout();
@@ -17,7 +19,12 @@ function Navbar() {
           MSA Shop
         </Link>
         <div className="flex gap-6 items-center">
-          <Link to="/users" className="hover:text-blue-200">회원관리</Link>
+          {isAuthenticated && (
+            <Link to="/profile" className="hover:text-blue-200">내 정보</Link>
+          )}
+          {isAdmin && (
+            <Link to="/users" className="hover:text-blue-200">회원관리</Link>
+          )}
           <Link to="/products" className="hover:text-blue-200">상품관리</Link>
           <Link to="/orders" className="hover:text-blue-200">주문관리</Link>
 
