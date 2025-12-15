@@ -4,7 +4,7 @@ import { useUsers, useAuth } from '../hooks/useUser';
 
 function UserList() {
   const navigate = useNavigate();
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated, currentUser, isAdmin } = useAuth();
   const { users, loading, error, fetchUsers, deleteUser, clearError } = useUsers();
 
   useEffect(() => {
@@ -13,22 +13,22 @@ function UserList() {
       navigate('/login');
       return;
     }
-    // 관리자 체크
-    if (currentUser && currentUser.role !== 'ADMIN') {
+    // 관리자 체크 (실제 role 또는 테스트 모드)
+    if (!isAdmin) {
       alert('관리자만 접근할 수 있습니다.');
       navigate('/');
       return;
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, isAdmin, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated && currentUser?.role === 'ADMIN') {
+    if (isAuthenticated && isAdmin) {
       fetchUsers();
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, isAdmin]);
 
   // 관리자 아니면 렌더링하지 않음
-  if (!isAuthenticated || currentUser?.role !== 'ADMIN') {
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 

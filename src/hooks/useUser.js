@@ -12,6 +12,13 @@ export const useAuth = () => {
   const initAuth = useUserStore((state) => state.initAuth);
   const clearError = useUserStore((state) => state.clearError);
 
+  // 테스트용 관리자 모드
+  const isAdminMode = useUserStore((state) => state.isAdminMode);
+  const setAdminMode = useUserStore((state) => state.setAdminMode);
+
+  // 관리자 여부 (실제 role 또는 테스트 모드)
+  const isAdmin = isAdminMode || currentUser?.role === 'ADMIN';
+
   return {
     isAuthenticated,
     currentUser,
@@ -23,6 +30,9 @@ export const useAuth = () => {
     logout,
     initAuth,
     clearError,
+    isAdminMode,
+    setAdminMode,
+    isAdmin,
   };
 };
 

@@ -22,6 +22,9 @@ export const useUserStore = create(
       currentUser: null,
       token: null,
 
+      // 테스트용 관리자 모드 (백엔드 role과 별개)
+      isAdminMode: false,
+
       // 사용자 목록 (관리용)
       users: [],
       loading: false,
@@ -76,8 +79,12 @@ export const useUserStore = create(
           isAuthenticated: false,
           currentUser: null,
           token: null,
+          isAdminMode: false,
         });
       },
+
+      // 관리자 모드 설정 (테스트용)
+      setAdminMode: (value) => set({ isAdminMode: value }),
 
       // 현재 사용자 정보 조회
       fetchCurrentUser: async (id) => {
@@ -159,6 +166,7 @@ export const useUserStore = create(
         isAuthenticated: state.isAuthenticated,
         token: state.token,
         currentUser: state.currentUser,
+        isAdminMode: state.isAdminMode,
       }),
     }
   )

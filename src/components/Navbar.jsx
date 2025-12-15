@@ -3,9 +3,7 @@ import { useAuth } from '../hooks/useUser';
 
 function Navbar() {
   const navigate = useNavigate();
-  const { isAuthenticated, currentUser, logout } = useAuth();
-
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const { isAuthenticated, currentUser, logout, isAdmin, isAdminMode } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -44,7 +42,9 @@ function Navbar() {
                 className="text-sm bg-blue-500 hover:bg-blue-400 px-3 py-1 rounded flex items-center gap-1"
               >
                 {isAdmin && (
-                  <span className="bg-purple-500 text-xs px-1 rounded">관리자</span>
+                  <span className={`text-xs px-1 rounded ${isAdminMode ? 'bg-orange-500' : 'bg-purple-500'}`}>
+                    {isAdminMode ? '테스트' : '관리자'}
+                  </span>
                 )}
                 {currentUser?.name || '사용자'}님
               </Link>
