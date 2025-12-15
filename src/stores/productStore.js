@@ -27,6 +27,45 @@ export const useProductStore = create((set, get) => ({
     return result;
   },
 
+  // 카테고리별 조회
+  fetchProductsByCategory: async (category) => {
+    set({ loading: true, error: null });
+    const result = await productApi.getByCategory(category);
+
+    if (result.success) {
+      set({ products: result.data, loading: false });
+    } else {
+      set({ error: result.error, loading: false });
+    }
+    return result;
+  },
+
+  // 판매중 상품 조회
+  fetchAvailableProducts: async () => {
+    set({ loading: true, error: null });
+    const result = await productApi.getAvailable();
+
+    if (result.success) {
+      set({ products: result.data, loading: false });
+    } else {
+      set({ error: result.error, loading: false });
+    }
+    return result;
+  },
+
+  // 상품 검색
+  searchProducts: async (keyword) => {
+    set({ loading: true, error: null });
+    const result = await productApi.search(keyword);
+
+    if (result.success) {
+      set({ products: result.data, loading: false });
+    } else {
+      set({ error: result.error, loading: false });
+    }
+    return result;
+  },
+
   // 생성
   createProduct: async (data) => {
     set({ loading: true });
@@ -66,6 +105,42 @@ export const useProductStore = create((set, get) => ({
     if (result.success) {
       set((state) => ({
         products: state.products.filter((product) => product.id !== id),
+        loading: false,
+      }));
+    } else {
+      set({ error: result.error, loading: false });
+    }
+    return result;
+  },
+
+  // 재고 감소
+  decreaseStock: async (id, quantity) => {
+    set({ loading: true });
+    const result = await productApi.decreaseStock(id, quantity);
+
+    if (result.success) {
+      set((state) => ({
+        products: state.products.map((product) =>
+          product.id === id ? { ...product, stock: product.stock - quantity } : product
+        ),
+        loading: false,
+      }));
+    } else {
+      set({ error: result.error, loading: false });
+    }
+    return result;
+  },
+
+  // 재고 증가
+  increaseStock: async (id, quantity) => {
+    set({ loading: true });
+    const result = await productApi.increaseStock(id, quantity);
+
+    if (result.success) {
+      set((state) => ({
+        products: state.products.map((product) =>
+          product.id === id ? { ...product, stock: product.stock + quantity } : product
+        ),
         loading: false,
       }));
     } else {
