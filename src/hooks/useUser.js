@@ -16,8 +16,8 @@ export const useAuth = () => {
   const isAdminMode = useUserStore((state) => state.isAdminMode);
   const setAdminMode = useUserStore((state) => state.setAdminMode);
 
-  // 관리자 여부 (실제 role 또는 테스트 모드)
-  const isAdmin = isAdminMode || currentUser?.role === 'ADMIN';
+  // 관리자 여부 (로그인 + (테스트 모드 또는 실제 role))
+  const isAdmin = isAuthenticated && (isAdminMode || currentUser?.role === 'ADMIN');
 
   return {
     isAuthenticated,
