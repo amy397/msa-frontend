@@ -7,6 +7,7 @@ import ProductShop from './pages/ProductShop';
 import MyPage from './pages/MyPage';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import AdminSignUp from './pages/AdminSignUp';
 import { useUserStore } from './stores/userStore';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/admin/signup" element={<AdminSignUp />} />
           <Route path="/mypage" element={<MyPage />} />
 
           {/* 일반 사용자 - 상품 조회/구매 */}
