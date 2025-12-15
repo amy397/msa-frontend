@@ -13,7 +13,7 @@ const STATUS_COLORS = {
   DISCONTINUED: 'bg-gray-100 text-gray-800',
 };
 
-export default function ProductList() {
+export default function ProductAdmin() {
   const {
     products,
     loading,

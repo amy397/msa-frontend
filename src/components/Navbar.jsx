@@ -5,6 +5,8 @@ function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, currentUser, logout } = useAuth();
 
+  const isAdmin = currentUser?.role === 'ADMIN';
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -18,18 +20,34 @@ function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6">
+          {/* 모든 사용자 - 상품 목록 */}
           <Link to="/products" className="hover:text-blue-200">
-            상품관리
+            상품
           </Link>
-          <Link to="/users" className="hover:text-blue-200">
-            회원관리
-          </Link>
+
+          {/* 관리자 전용 메뉴 */}
+          {isAdmin && (
+            <>
+              <Link to="/admin/products" className="hover:text-blue-200">
+                상품관리
+              </Link>
+              <Link to="/admin/users" className="hover:text-blue-200">
+                회원관리
+              </Link>
+            </>
+          )}
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              <span className="text-sm bg-blue-500 px-3 py-1 rounded">
-                {currentUser?.name || currentUser?.email || '사용자'}님
-              </span>
+              <Link
+                to="/mypage"
+                className="text-sm bg-blue-500 hover:bg-blue-400 px-3 py-1 rounded flex items-center gap-1"
+              >
+                {isAdmin && (
+                  <span className="bg-purple-500 text-xs px-1 rounded">관리자</span>
+                )}
+                {currentUser?.name || '사용자'}님
+              </Link>
               <button
                 onClick={handleLogout}
                 className="bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded text-sm"
