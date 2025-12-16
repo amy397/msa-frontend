@@ -81,6 +81,16 @@ export default function Login() {
             회원가입
           </Link>
         </p>
+
+         {/* 여기에 추가 */}
+        <p className="mt-2 text-center text-xs text-gray-500">
+          관리자이신가요?{' '}
+          <Link to="/admin/signup" className="text-purple-600 hover:underline">
+            관리자 가입
+          </Link>
+        </p>
+
+
       </div>
     </div>
   );
