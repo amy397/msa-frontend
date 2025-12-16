@@ -19,15 +19,12 @@ spec:
         image: amy397/gateway-service:latest
         ports:
         - containerPort: 9090
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
         env:
-        - name: USER_SERVICE_URL
-          value: http://user-service:8081
-        - name: PRODUCT_SERVICE_URL
-          value: http://product-service:8082
-        - name: ORDER_SERVICE_URL
-          value: http://order-service:8083
-        - name: PAYMENT_SERVICE_URL
-          value: http://payment-service:8084
+        - name: SPRING_CONFIG_LOCATION
+          value: /app/config/application.yml
         resources:
           requests:
             memory: "256Mi"
@@ -47,3 +44,7 @@ spec:
             port: 9090
           initialDelaySeconds: 30
           periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: gateway-config
