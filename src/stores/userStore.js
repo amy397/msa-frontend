@@ -50,26 +50,34 @@ export const useUserStore = create(
         const result = await userApi.login(data);
 
         if (result.success) {
-          const { accessToken } = result.data;
+          const { accessToken, user } = result.data;
           localStorage.setItem('token', accessToken);
 
-          // 토큰에서 사용자 정보 파싱
-          const payload = parseToken(accessToken);
+          // 로그인 응답에 user 정보가 있으면 바로 사용
+          if (user) {
+            set({
+              isAuthenticated: true,
+              token: accessToken,
+              currentUser: user,
+              loading: false,
+            });
+          } else {
+            // user 정보가 없으면 토큰에서 파싱 후 조회
+            const payload = parseToken(accessToken);
 
-          set({
-            isAuthenticated: true,
-            token: accessToken,
-            loading: false,
-          });
+            set({
+              isAuthenticated: true,
+              token: accessToken,
+              loading: false,
+            });
 
-          // 사용자 정보 조회 (userId 또는 id 필드 우선, 없으면 sub 사용)
-          const userId = payload?.userId || payload?.id || payload?.sub;
-          if (userId) {
-            // sub가 이메일인 경우 이메일로 조회
-            if (typeof userId === 'string' && userId.includes('@')) {
-              await get().fetchCurrentUserByEmail(userId);
-            } else {
-              await get().fetchCurrentUser(userId);
+            const userId = payload?.userId || payload?.id || payload?.sub;
+            if (userId) {
+              if (typeof userId === 'string' && userId.includes('@')) {
+                await get().fetchCurrentUserByEmail(userId);
+              } else {
+                await get().fetchCurrentUser(userId);
+              }
             }
           }
         } else {
