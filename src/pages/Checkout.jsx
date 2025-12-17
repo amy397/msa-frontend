@@ -30,6 +30,11 @@ export default function Checkout() {
       return;
     }
 
+    if (!currentUser?.id) {
+      setError('사용자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -173,10 +178,10 @@ export default function Checkout() {
       {/* 결제 버튼 */}
       <button
         onClick={handlePayment}
-        disabled={loading}
+        disabled={loading || !currentUser?.id}
         className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-bold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        {loading ? '처리 중...' : `${totalAmount.toLocaleString()}원 결제하기`}
+        {loading ? '처리 중...' : !currentUser?.id ? '사용자 정보 로딩 중...' : `${totalAmount.toLocaleString()}원 결제하기`}
       </button>
     </div>
   );
