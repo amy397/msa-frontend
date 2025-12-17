@@ -88,12 +88,15 @@ export const useUserStore = create(
       // 로그아웃
       logout: () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('cart-storage'); // 장바구니도 초기화
         set({
           isAuthenticated: false,
           currentUser: null,
           token: null,
           isAdminMode: false,
         });
+        // 페이지 새로고침으로 Zustand 상태 완전 초기화
+        window.location.href = '/';
       },
 
       // 관리자 모드 설정 (테스트용)
