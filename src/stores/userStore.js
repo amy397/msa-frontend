@@ -125,12 +125,16 @@ export const useUserStore = create(
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
             set({ isAuthenticated: true, token });
-            const userId = payload?.userId || payload?.id || payload?.sub;
-            if (userId) {
-              if (typeof userId === 'string' && userId.includes('@')) {
-                get().fetchCurrentUserByEmail(userId);
-              } else {
-                get().fetchCurrentUser(userId);
+            // currentUser가 이미 persist로 저장되어 있으면 API 호출 안함
+            const currentUser = get().currentUser;
+            if (!currentUser) {
+              const userId = payload?.userId || payload?.id || payload?.sub;
+              if (userId) {
+                if (typeof userId === 'string' && userId.includes('@')) {
+                  get().fetchCurrentUserByEmail(userId);
+                } else {
+                  get().fetchCurrentUser(userId);
+                }
               }
             }
           } else {
