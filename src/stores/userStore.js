@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { userApi } from '../api/userApi';
+import { useCartStore } from './cartStore';
 
 // 토큰에서 사용자 ID 추출 (JWT 디코딩)
 const parseToken = (token) => {
@@ -87,14 +88,20 @@ export const useUserStore = create(
 
       // 로그아웃
       logout: () => {
+        // 장바구니 상태 초기화
+        useCartStore.getState().clearCart();
+
         localStorage.removeItem('token');
-        localStorage.removeItem('cart-storage'); // 장바구니도 초기화
+        localStorage.removeItem('cart-storage');
+        localStorage.removeItem('user-storage');
+
         set({
           isAuthenticated: false,
           currentUser: null,
           token: null,
           isAdminMode: false,
         });
+
         // 페이지 새로고침으로 Zustand 상태 완전 초기화
         window.location.href = '/';
       },
@@ -106,7 +113,17 @@ export const useUserStore = create(
       fetchCurrentUser: async (id) => {
         const result = await userApi.getById(id);
         if (result.success) {
-          set({ currentUser: result.data });
+          // 기존 토큰에서 파싱한 role 유지
+          const currentUser = get().currentUser;
+          const tokenRole = currentUser?.role;
+
+          set({
+            currentUser: {
+              ...result.data,
+              // API 응답에 role이 없으면 토큰의 role 사용
+              role: result.data.role || tokenRole || 'USER',
+            },
+          });
         }
         return result;
       },
@@ -117,26 +134,30 @@ export const useUserStore = create(
         if (token) {
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
-            // 토큰에서 기본 사용자 정보 설정
+            // 토큰에서 기본 사용자 정보 설정 (role 포함)
+            const tokenRole = payload.role || 'USER';
             const userFromToken = {
               id: payload.userId || payload.sub,
               email: payload.email || payload.sub,
               name: payload.name || '사용자',
-              role: payload.role || 'USER',
+              role: tokenRole,
             };
 
             set({ isAuthenticated: true, token, currentUser: userFromToken });
 
-            // API로 상세 정보 조회 시도
+            // API로 상세 정보 조회 시도 (role은 토큰 값 유지)
             if (payload.sub) {
               const result = await get().fetchCurrentUser(payload.sub);
+              // fetchCurrentUser가 role을 보존하므로 별도 처리 불필요
               if (!result?.success) {
                 set({ currentUser: userFromToken });
               }
             }
           } else {
-            // 토큰 만료
+            // 토큰 만료 - 모든 저장소 초기화
             localStorage.removeItem('token');
+            localStorage.removeItem('user-storage');
+            localStorage.removeItem('cart-storage');
             set({ isAuthenticated: false, token: null, currentUser: null });
           }
         }
