@@ -34,8 +34,11 @@ const BASE_URL = '/api/users';
  */
 
 export const userApi = {
-  // 회원가입
+  // 일반 회원가입
   signUp: (data) => apiRequest('post', `${BASE_URL}/signup`, data),
+
+  // 관리자 회원가입
+  adminSignUp: (data) => apiRequest('post', `${BASE_URL}/admin/signup`, data),
 
   // 로그인
   login: (data) => apiRequest('post', `${BASE_URL}/login`, data),

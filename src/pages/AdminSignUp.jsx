@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useUser';
+import { userApi } from '../api/userApi';
 
 export default function AdminSignUp() {
   const navigate = useNavigate();
-  const { signUp, login, setAdminMode, loading, error: authError, clearError } = useAuth();
+  const { login, error: authError, clearError } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -16,8 +17,7 @@ export default function AdminSignUp() {
   });
   const [error, setError] = useState('');
 
-  // 관리자 인증 코드 (실제 환경에서는 환경변수로 관리)
-  const ADMIN_SECRET_CODE = 'ADMIN2024';
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,25 +28,23 @@ export default function AdminSignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 관리자 코드 검증
-    if (formData.adminCode !== ADMIN_SECRET_CODE) {
-      setError('관리자 인증 코드가 올바르지 않습니다.');
-      return;
-    }
+    setIsLoading(true);
+    setError('');
 
     // 비밀번호 확인
     if (formData.password !== formData.confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.');
+      setIsLoading(false);
       return;
     }
 
-    // 회원가입 요청
-    const signUpResult = await signUp({
+    // 관리자 회원가입 요청 (백엔드 /api/users/admin/signup 호출)
+    const signUpResult = await userApi.adminSignUp({
       email: formData.email,
       password: formData.password,
       name: formData.name,
       phone: formData.phone,
+      adminCode: formData.adminCode,
     });
 
     if (signUpResult.success) {
@@ -57,16 +55,18 @@ export default function AdminSignUp() {
       });
 
       if (loginResult.success) {
-        // 관리자 모드 활성화
-        setAdminMode(true);
         alert('관리자 계정이 생성되었습니다!');
         navigate('/');
       } else {
-        // 로그인 실패 시 로그인 페이지로 이동
-        alert('회원가입 완료! 로그인 페이지에서 로그인 후 관리자 모드를 활성화하세요.');
+        alert('회원가입 완료! 로그인 페이지에서 로그인해주세요.');
         navigate('/login');
       }
+    } else {
+      // 회원가입 실패
+      setError(signUpResult.error || '관리자 회원가입에 실패했습니다.');
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -185,10 +185,10 @@ export default function AdminSignUp() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-300"
           >
-            {loading ? '처리 중...' : '관리자로 가입하기'}
+            {isLoading ? '처리 중...' : '관리자로 가입하기'}
           </button>
         </form>
 
