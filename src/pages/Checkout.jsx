@@ -41,14 +41,11 @@ export default function Checkout() {
     try {
       // 1. 주문 생성
       const orderData = {
-        userId: currentUser.id,
-        orderItems: items.map((item) => ({
-          productId: item.id,
-          productName: item.name,
+        userId: Number(currentUser.id),
+        items: items.map((item) => ({
+          productId: Number(item.id),
           quantity: item.quantity,
-          price: item.price,
         })),
-        totalAmount,
       };
 
       const result = await paymentApi.preparePayment(orderData);
