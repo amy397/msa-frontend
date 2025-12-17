@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useUser';
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const { signUp, loading, error, clearError } = useAuth();
+  const { signUp, adminSignUp, loading, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -12,6 +12,8 @@ export default function SignUp() {
     name: '',
     phone: '',
   });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCode, setAdminCode] = useState('');
   const [validationError, setValidationError] = useState('');
 
   const handleChange = (e) => {
@@ -37,10 +39,18 @@ export default function SignUp() {
     }
 
     const { passwordConfirm, ...signUpData } = formData;
-    const result = await signUp(signUpData);
+
+    let result;
+    if (isAdmin) {
+      // 관리자 회원가입
+      result = await adminSignUp({ ...signUpData, adminCode });
+    } else {
+      // 일반 회원가입
+      result = await signUp(signUpData);
+    }
 
     if (result.success) {
-      alert('회원가입이 완료되었습니다. 로그인해주세요.');
+      alert(`회원가입이 완료되었습니다. ${isAdmin ? '(관리자) ' : ''}로그인해주세요.`);
       navigate('/login');
     }
   };
@@ -130,6 +140,35 @@ export default function SignUp() {
               placeholder="010-1234-5678"
             />
           </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isAdmin"
+              checked={isAdmin}
+              onChange={(e) => setIsAdmin(e.target.checked)}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="isAdmin" className="ml-2 text-sm text-gray-700">
+              관리자로 가입
+            </label>
+          </div>
+
+          {isAdmin && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                관리자 인증코드 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+                required={isAdmin}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="관리자 인증코드 입력"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
