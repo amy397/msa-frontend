@@ -49,8 +49,11 @@ export const useUserStore = create(
         set({ loading: true, error: null, currentUser: null });  // 이전 사용자 정보 초기화
         const result = await userApi.login(data);
 
+        console.log('🔍 로그인 응답 전체:', JSON.stringify(result, null, 2));
+
         if (result.success) {
           const { accessToken, user } = result.data;
+          console.log('🔍 user 필드:', user);
           localStorage.setItem('token', accessToken);
 
           // 로그인 응답에 user 정보가 있으면 바로 사용
