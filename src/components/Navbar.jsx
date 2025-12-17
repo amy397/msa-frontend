@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useUser';
+import { useCart } from '../hooks/useCart';
 
 function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, currentUser, logout, isAdmin, isAdminMode } = useAuth();
+  const { totalCount } = useCart();
 
   const handleLogout = () => {
     logout();
@@ -22,6 +24,22 @@ function Navbar() {
           <Link to="/products" className="hover:text-blue-200">
             상품
           </Link>
+
+          {isAuthenticated && (
+            <>
+              <Link to="/checkout" className="hover:text-blue-200 relative">
+                장바구니
+                {totalCount > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {totalCount}
+                  </span>
+                )}
+              </Link>
+              <Link to="/orders" className="hover:text-blue-200">
+                주문내역
+              </Link>
+            </>
+          )}
 
           {/* 관리자 전용 메뉴 */}
           {isAdmin && (
