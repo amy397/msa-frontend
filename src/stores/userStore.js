@@ -56,15 +56,28 @@ export const useUserStore = create(
           // 토큰에서 사용자 정보 파싱
           const payload = parseToken(accessToken);
 
+          // 토큰에서 기본 사용자 정보 설정
+          const userFromToken = payload ? {
+            id: payload.userId || payload.sub,
+            email: payload.email || payload.sub,
+            name: payload.name || data.email?.split('@')[0] || '사용자',
+            role: payload.role || 'USER',
+          } : null;
+
           set({
             isAuthenticated: true,
             token: accessToken,
+            currentUser: userFromToken,
             loading: false,
           });
 
-          // 사용자 정보 조회
+          // API로 상세 사용자 정보 조회 시도
           if (payload?.sub) {
-            await get().fetchCurrentUser(payload.sub);
+            const userResult = await get().fetchCurrentUser(payload.sub);
+            // API 실패 시 토큰 정보 유지
+            if (!userResult?.success && userFromToken) {
+              set({ currentUser: userFromToken });
+            }
           }
         } else {
           set({ error: result.error, loading: false });
@@ -96,14 +109,27 @@ export const useUserStore = create(
       },
 
       // 인증 상태 초기화 (앱 시작시)
-      initAuth: () => {
+      initAuth: async () => {
         const token = localStorage.getItem('token');
         if (token) {
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
-            set({ isAuthenticated: true, token });
+            // 토큰에서 기본 사용자 정보 설정
+            const userFromToken = {
+              id: payload.userId || payload.sub,
+              email: payload.email || payload.sub,
+              name: payload.name || '사용자',
+              role: payload.role || 'USER',
+            };
+
+            set({ isAuthenticated: true, token, currentUser: userFromToken });
+
+            // API로 상세 정보 조회 시도
             if (payload.sub) {
-              get().fetchCurrentUser(payload.sub);
+              const result = await get().fetchCurrentUser(payload.sub);
+              if (!result?.success) {
+                set({ currentUser: userFromToken });
+              }
             }
           } else {
             // 토큰 만료
