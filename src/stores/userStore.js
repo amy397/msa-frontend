@@ -46,7 +46,7 @@ export const useUserStore = create(
 
       // 로그인
       login: async (data) => {
-        set({ loading: true, error: null });
+        set({ loading: true, error: null, currentUser: null });  // 이전 사용자 정보 초기화
         const result = await userApi.login(data);
 
         if (result.success) {

@@ -5,9 +5,10 @@ import { useCart } from '../hooks/useCart';
 function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, currentUser, logout, isAdmin, isAdminMode } = useAuth();
-  const { totalCount } = useCart();
+  const { totalCount, clearCart } = useCart();
 
   const handleLogout = () => {
+    clearCart();  // 로그아웃 시 장바구니 비우기
     logout();
     navigate('/');
   };
