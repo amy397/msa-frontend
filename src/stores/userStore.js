@@ -15,6 +15,32 @@ const parseToken = (token) => {
   }
 };
 
+// 토큰에서 role 추출 (다양한 형식 지원)
+const extractRole = (payload) => {
+  if (!payload) return 'USER';
+
+  // 다양한 role 클레임 이름 확인
+  const role =
+    payload.role ||
+    payload.roles ||
+    payload.authorities ||
+    payload.scope ||
+    payload.auth ||
+    null;
+
+  if (!role) return 'USER';
+
+  // 배열인 경우 첫 번째 값 사용
+  const roleStr = Array.isArray(role) ? role[0] : role;
+
+  // ROLE_ 접두사 제거
+  if (typeof roleStr === 'string') {
+    return roleStr.replace(/^ROLE_/i, '').toUpperCase();
+  }
+
+  return 'USER';
+};
+
 export const useUserStore = create(
   persist(
     (set, get) => ({
@@ -56,13 +82,17 @@ export const useUserStore = create(
 
           // 토큰에서 사용자 정보 파싱
           const payload = parseToken(accessToken);
+          const tokenRole = extractRole(payload);
+
+          console.log('로그인 토큰 payload:', payload);
+          console.log('추출된 role:', tokenRole);
 
           // 토큰에서 기본 사용자 정보 설정
           const userFromToken = payload ? {
             id: payload.userId || payload.sub,
             email: payload.email || payload.sub,
             name: payload.name || data.email?.split('@')[0] || '사용자',
-            role: payload.role || 'USER',
+            role: tokenRole,
           } : null;
 
           set({
@@ -113,15 +143,22 @@ export const useUserStore = create(
       fetchCurrentUser: async (id) => {
         const result = await userApi.getById(id);
         if (result.success) {
-          // 기존 토큰에서 파싱한 role 유지
+          // 기존 토큰에서 파싱한 role 유지 (우선순위: 토큰 role > API role)
           const currentUser = get().currentUser;
           const tokenRole = currentUser?.role;
+
+          // API 응답의 role도 정규화
+          const apiRole = result.data.role
+            ? result.data.role.replace(/^ROLE_/i, '').toUpperCase()
+            : null;
+
+          console.log('fetchCurrentUser - tokenRole:', tokenRole, 'apiRole:', apiRole);
 
           set({
             currentUser: {
               ...result.data,
-              // API 응답에 role이 없으면 토큰의 role 사용
-              role: result.data.role || tokenRole || 'USER',
+              // 토큰의 role을 우선 사용 (API보다 신뢰성 있음)
+              role: tokenRole || apiRole || 'USER',
             },
           });
         }
@@ -135,7 +172,11 @@ export const useUserStore = create(
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
             // 토큰에서 기본 사용자 정보 설정 (role 포함)
-            const tokenRole = payload.role || 'USER';
+            const tokenRole = extractRole(payload);
+
+            console.log('initAuth 토큰 payload:', payload);
+            console.log('initAuth 추출된 role:', tokenRole);
+
             const userFromToken = {
               id: payload.userId || payload.sub,
               email: payload.email || payload.sub,
