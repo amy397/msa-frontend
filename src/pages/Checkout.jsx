@@ -42,7 +42,7 @@ export default function Checkout() {
       // 1. 주문 생성
       const orderData = {
         userId: currentUser.id,
-        items: items.map((item) => ({
+        orderItems: items.map((item) => ({
           productId: item.id,
           productName: item.name,
           quantity: item.quantity,
