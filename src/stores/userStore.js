@@ -124,19 +124,8 @@ export const useUserStore = create(
         if (token) {
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
+            // 토큰 유효 - persist된 currentUser 사용 (API 호출 안함)
             set({ isAuthenticated: true, token });
-            // currentUser가 이미 persist로 저장되어 있으면 API 호출 안함
-            const currentUser = get().currentUser;
-            if (!currentUser) {
-              const userId = payload?.userId || payload?.id || payload?.sub;
-              if (userId) {
-                if (typeof userId === 'string' && userId.includes('@')) {
-                  get().fetchCurrentUserByEmail(userId);
-                } else {
-                  get().fetchCurrentUser(userId);
-                }
-              }
-            }
           } else {
             // 토큰 만료
             localStorage.removeItem('token');
