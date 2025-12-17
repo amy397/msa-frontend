@@ -62,9 +62,15 @@ export const useUserStore = create(
             loading: false,
           });
 
-          // 사용자 정보 조회
-          if (payload?.sub) {
-            await get().fetchCurrentUser(payload.sub);
+          // 사용자 정보 조회 (userId 또는 id 필드 우선, 없으면 sub 사용)
+          const userId = payload?.userId || payload?.id || payload?.sub;
+          if (userId) {
+            // sub가 이메일인 경우 이메일로 조회
+            if (typeof userId === 'string' && userId.includes('@')) {
+              await get().fetchCurrentUserByEmail(userId);
+            } else {
+              await get().fetchCurrentUser(userId);
+            }
           }
         } else {
           set({ error: result.error, loading: false });
@@ -86,9 +92,18 @@ export const useUserStore = create(
       // 관리자 모드 설정 (테스트용)
       setAdminMode: (value) => set({ isAdminMode: value }),
 
-      // 현재 사용자 정보 조회
+      // 현재 사용자 정보 조회 (ID로)
       fetchCurrentUser: async (id) => {
         const result = await userApi.getById(id);
+        if (result.success) {
+          set({ currentUser: result.data });
+        }
+        return result;
+      },
+
+      // 현재 사용자 정보 조회 (이메일로)
+      fetchCurrentUserByEmail: async (email) => {
+        const result = await userApi.getByEmail(email);
         if (result.success) {
           set({ currentUser: result.data });
         }
@@ -102,8 +117,13 @@ export const useUserStore = create(
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
             set({ isAuthenticated: true, token });
-            if (payload.sub) {
-              get().fetchCurrentUser(payload.sub);
+            const userId = payload?.userId || payload?.id || payload?.sub;
+            if (userId) {
+              if (typeof userId === 'string' && userId.includes('@')) {
+                get().fetchCurrentUserByEmail(userId);
+              } else {
+                get().fetchCurrentUser(userId);
+              }
             }
           } else {
             // 토큰 만료
