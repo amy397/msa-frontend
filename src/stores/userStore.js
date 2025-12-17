@@ -58,23 +58,10 @@ export const useUserStore = create(
       error: null,
       selectedUser: null,
 
-      // 일반 회원가입
+      // 회원가입
       signUp: async (data) => {
         set({ loading: true, error: null });
         const result = await userApi.signUp(data);
-
-        if (result.success) {
-          set({ loading: false });
-        } else {
-          set({ error: result.error, loading: false });
-        }
-        return result;
-      },
-
-      // 관리자 회원가입
-      adminSignUp: async (data) => {
-        set({ loading: true, error: null });
-        const result = await userApi.adminSignUp(data);
 
         if (result.success) {
           set({ loading: false });

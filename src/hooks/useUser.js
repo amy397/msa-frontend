@@ -7,7 +7,6 @@ export const useAuth = () => {
   const loading = useUserStore((state) => state.loading);
   const error = useUserStore((state) => state.error);
   const signUp = useUserStore((state) => state.signUp);
-  const adminSignUp = useUserStore((state) => state.adminSignUp);
   const login = useUserStore((state) => state.login);
   const logout = useUserStore((state) => state.logout);
   const initAuth = useUserStore((state) => state.initAuth);
@@ -27,7 +26,6 @@ export const useAuth = () => {
     loading,
     error,
     signUp,
-    adminSignUp,
     login,
     logout,
     initAuth,
