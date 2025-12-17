@@ -65,22 +65,42 @@ export const useUserStore = create(
               loading: false,
             });
           } else {
-            // user 정보가 없으면 토큰에서 파싱 후 조회
+            // user 정보가 없으면 토큰에서 파싱
             const payload = parseToken(accessToken);
+            console.log('🔍 JWT payload:', payload);
 
-            set({
-              isAuthenticated: true,
-              token: accessToken,
-              loading: false,
-            });
+            const email = payload?.sub;
 
-            const userId = payload?.userId || payload?.id || payload?.sub;
-            if (userId) {
-              if (typeof userId === 'string' && userId.includes('@')) {
-                await get().fetchCurrentUserByEmail(userId);
-              } else {
-                await get().fetchCurrentUser(userId);
+            // API로 사용자 정보 조회 시도
+            let userFound = false;
+            if (email) {
+              const result = await userApi.getByEmail(email);
+              if (result.success) {
+                set({
+                  isAuthenticated: true,
+                  token: accessToken,
+                  currentUser: result.data,
+                  loading: false,
+                });
+                userFound = true;
               }
+            }
+
+            // API 실패 시 토큰에서 최소한의 사용자 정보 생성
+            if (!userFound) {
+              console.log('⚠️ API 조회 실패, 토큰에서 사용자 정보 생성');
+              const tempUser = {
+                id: payload?.userId || payload?.id || 0,
+                email: email || '',
+                name: payload?.name || email?.split('@')[0] || '사용자',
+                role: payload?.role || 'USER',
+              };
+              set({
+                isAuthenticated: true,
+                token: accessToken,
+                currentUser: tempUser,
+                loading: false,
+              });
             }
           }
         } else {
