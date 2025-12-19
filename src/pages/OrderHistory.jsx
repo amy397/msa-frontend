@@ -4,21 +4,59 @@ import { useAuth } from '../hooks/useUser';
 import { orderApi } from '../api/orderApi';
 
 const STATUS_LABELS = {
+  // 주문 대기
   PENDING: '주문 대기',
+  PENDING_PAYMENT: '입금 대기',
+  WAITING: '주문 대기',
+  // 결제 완료
   PAID: '결제 완료',
+  CONFIRMED: '주문 확인',
+  PAYMENT_COMPLETED: '결제 완료',
+  // 준비중
   PREPARING: '상품 준비중',
+  PROCESSING: '처리중',
+  IN_PROGRESS: '진행중',
+  // 배송
   SHIPPING: '배송중',
+  SHIPPED: '배송중',
+  IN_DELIVERY: '배송중',
+  // 완료
   DELIVERED: '배송 완료',
+  COMPLETED: '주문 완료',
+  DONE: '완료',
+  // 취소
   CANCELLED: '주문 취소',
+  CANCELED: '주문 취소',
+  REFUNDED: '환불 완료',
+  FAILED: '주문 실패',
 };
 
 const STATUS_COLORS = {
+  // 대기
   PENDING: 'bg-yellow-100 text-yellow-800',
+  PENDING_PAYMENT: 'bg-yellow-100 text-yellow-800',
+  WAITING: 'bg-yellow-100 text-yellow-800',
+  // 결제/확인
   PAID: 'bg-blue-100 text-blue-800',
+  CONFIRMED: 'bg-blue-100 text-blue-800',
+  PAYMENT_COMPLETED: 'bg-blue-100 text-blue-800',
+  // 준비
   PREPARING: 'bg-purple-100 text-purple-800',
+  PROCESSING: 'bg-purple-100 text-purple-800',
+  IN_PROGRESS: 'bg-purple-100 text-purple-800',
+  // 배송
   SHIPPING: 'bg-indigo-100 text-indigo-800',
+  SHIPPED: 'bg-indigo-100 text-indigo-800',
+  IN_DELIVERY: 'bg-indigo-100 text-indigo-800',
+  // 완료
   DELIVERED: 'bg-green-100 text-green-800',
+  COMPLETED: 'bg-green-100 text-green-800',
+  DONE: 'bg-green-100 text-green-800',
+  // 취소/실패
   CANCELLED: 'bg-red-100 text-red-800',
+  CANCELED: 'bg-red-100 text-red-800',
+  REFUNDED: 'bg-orange-100 text-orange-800',
+  FAILED: 'bg-red-100 text-red-800',
 };
 
 export default function OrderHistory() {
