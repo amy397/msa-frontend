@@ -941,6 +941,263 @@ msa-frontend/
 
 ---
 
+## 6. Monitoring - Prometheus & Grafana 설계
+
+### 6.1 모니터링 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         Monitoring Stack Architecture                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│   ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐           │
+│   │    Grafana      │────▶│   Prometheus    │────▶│    Targets      │           │
+│   │   (시각화)       │     │  (수집/저장)     │     │   (메트릭)       │           │
+│   │   :3000         │     │    :9090        │     │                 │           │
+│   └─────────────────┘     └─────────────────┘     └─────────────────┘           │
+│           │                       │                       │                     │
+│           ▼                       ▼                       ▼                     │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │                          수집 대상 (Exporters)                          │   │
+│   │                                                                         │   │
+│   │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│   │  │    Node     │  │ kube-state  │  │Spring Boot  │  │   Nginx     │     │   │
+│   │  │  Exporter   │  │   metrics   │  │  Actuator   │  │  Exporter   │     │   │
+│   │  │             │  │             │  │             │  │             │     │   │
+│   │  │ CPU/Memory  │  │ Pod/Deploy  │  │ JVM/HTTP    │  │ Request/    │     │   │
+│   │  │ Disk/Net    │  │   Status    │  │  Metrics    │  │ Response    │     │   │
+│   │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│   │                                                                         │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Namespace 구성
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              K8s Cluster                                        │
+│                                                                                 │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │                    Namespace: monitoring                                │   │
+│   │                                                                         │   │
+│   │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │   │
+│   │   │  Grafana    │  │ Prometheus  │  │Alertmanager │  │ Node        │    │   │
+│   │   │             │  │             │  │             │  │ Exporter    │    │   │
+│   │   │  Port:3000  │  │  Port:9090  │  │  Port:9093  │  │ Port:9100   │    │   │
+│   │   └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │   │
+│   │                                                                         │   │
+│   │   ┌─────────────┐  ┌─────────────┐                                      │   │
+│   │   │ kube-state  │  │ Prometheus  │                                      │   │
+│   │   │  -metrics   │  │  Operator   │                                      │   │
+│   │   └─────────────┘  └─────────────┘                                      │   │
+│   │                                                                         │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│                                     │                                           │
+│                                     │ 메트릭 수집                                │
+│                                     ▼                                           │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │                    Namespace: msa-shop                                  │   │
+│   │                                                                         │   │
+│   │   Frontend ──┬── /actuator/prometheus                                   │   │
+│   │   Gateway  ──┤                                                          │   │
+│   │   User-svc ──┤   (Spring Boot Actuator 엔드포인트)                       │   │
+│   │   Order-svc ─┤                                                          │   │
+│   │   Product ───┤                                                          │   │
+│   │   Payment ───┘                                                          │   │
+│   │                                                                         │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.3 설치 명령어
+
+```bash
+# 1. Helm 설치
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# 2. Namespace 생성
+kubectl create namespace monitoring
+
+# 3. Prometheus 스택 설치 (Grafana 포함)
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+helm install prometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --set grafana.adminPassword=admin123 \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+
+# 4. 설치 확인
+kubectl get pods -n monitoring
+```
+
+### 6.4 Spring Boot 메트릭 설정
+
+```xml
+<!-- pom.xml - 각 Spring Boot 서비스에 추가 -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+```
+
+```yaml
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+```
+
+### 6.5 ServiceMonitor 설정
+
+```yaml
+# servicemonitor.yaml - Prometheus가 Spring Boot 메트릭 자동 수집
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: spring-boot-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - msa-shop
+  selector:
+    matchLabels:
+      monitor: spring-boot
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 15s
+```
+
+### 6.6 Grafana Ingress 설정
+
+```yaml
+# grafana-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: monitoring
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: grafana.shop.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-grafana
+            port:
+              number: 80
+```
+
+### 6.7 추천 Grafana 대시보드
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        Recommended Dashboards                                   │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│   Dashboard Name          │  Import ID  │  Purpose                             │
+│   ────────────────────────┼─────────────┼──────────────────────────────────────│
+│   Node Exporter Full      │    1860     │  서버 리소스 (CPU/Memory/Disk/Net)   │
+│   K8s Cluster Monitoring  │   15520     │  K8s 전체 현황                       │
+│   Spring Boot Statistics  │   12900     │  JVM 메모리, HTTP 요청, GC           │
+│   NGINX Ingress           │   14314     │  요청 수, 응답 시간, 에러율          │
+│   MySQL Overview          │    7362     │  DB 성능, 쿼리, 커넥션               │
+│                                                                                 │
+│   Import 방법: Grafana → Dashboards → Import → ID 입력                         │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.8 알람 설정 (Alertmanager)
+
+```yaml
+# alertmanager-config.yaml (Slack 연동 예시)
+global:
+  slack_api_url: 'https://hooks.slack.com/services/xxx/xxx/xxx'
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#msa-alerts'
+    send_resolved: true
+    title: '{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}'
+    text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+```
+
+### 6.9 주요 알람 규칙
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           Alert Rules                                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│   Alert Name              │  Condition                │  Severity              │
+│   ────────────────────────┼───────────────────────────┼────────────────────────│
+│   HighCPUUsage            │  CPU > 80% for 5m         │  warning               │
+│   HighMemoryUsage         │  Memory > 85% for 5m      │  warning               │
+│   PodCrashLooping         │  Restart > 5 in 10m       │  critical              │
+│   ServiceDown             │  Pod = 0 for 1m           │  critical              │
+│   HighErrorRate           │  HTTP 5xx > 5% for 5m     │  warning               │
+│   SlowResponseTime        │  Latency > 2s for 5m      │  warning               │
+│   DiskSpaceLow            │  Disk > 85%               │  warning               │
+│   DatabaseConnectionHigh  │  Connections > 80%        │  warning               │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.10 모니터링 접속 URL
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        Monitoring URLs                                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│   Service          │  URL                              │  Credentials          │
+│   ─────────────────┼───────────────────────────────────┼───────────────────────│
+│   Grafana          │  http://grafana.shop.local        │  admin / admin123     │
+│   Prometheus       │  http://prometheus.shop.local     │  -                    │
+│   Alertmanager     │  http://alertmanager.shop.local   │  -                    │
+│                                                                                 │
+│   * bind9 DNS에 다음 레코드 추가 필요:                                           │
+│     grafana      IN    A    192.168.1.200                                       │
+│     prometheus   IN    A    192.168.1.200                                       │
+│     alertmanager IN    A    192.168.1.200                                       │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Summary
 
 | 구분 | 기술 스택 |
@@ -953,6 +1210,7 @@ msa-frontend/
 | Network | Calico CNI |
 | Storage | NFS / Local Persistent Volume |
 | Payment | Toss Payments API |
+| Monitoring | Prometheus, Grafana, Alertmanager |
 
 ---
 
