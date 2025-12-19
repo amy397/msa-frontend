@@ -22,10 +22,10 @@ export default function Checkout() {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !showBankInfo) {
       navigate('/products');
     }
-  }, [items, navigate]);
+  }, [items, navigate, showBankInfo]);
 
   // 무통장입금 처리
   const handleBankTransfer = async () => {
@@ -136,7 +136,8 @@ export default function Checkout() {
     }
   };
 
-  if (items.length === 0) {
+  // 장바구니가 비었는데 무통장입금 모달도 안보이면 상품 페이지로
+  if (items.length === 0 && !showBankInfo) {
     return null;
   }
 
