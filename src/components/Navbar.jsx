@@ -26,7 +26,8 @@ function Navbar() {
             상품
           </Link>
 
-          {isAuthenticated && (
+          {/* 일반 사용자만 - 장바구니, 주문내역 */}
+          {isAuthenticated && !isAdmin && (
             <>
               <Link to="/checkout" className="hover:text-blue-200 relative">
                 장바구니
