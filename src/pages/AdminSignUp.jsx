@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useUser';
+import { userApi } from '../api/userApi';
 
 export default function AdminSignUp() {
   const navigate = useNavigate();
@@ -16,9 +17,6 @@ export default function AdminSignUp() {
   });
   const [error, setError] = useState('');
 
-  // 관리자 인증 코드 (실제 환경에서는 환경변수로 관리)
-  const ADMIN_SECRET_CODE = 'ADMIN2024';
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -29,25 +27,19 @@ export default function AdminSignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 관리자 코드 검증
-    if (formData.adminCode !== ADMIN_SECRET_CODE) {
-      setError('관리자 인증 코드가 올바르지 않습니다.');
-      return;
-    }
-
     // 비밀번호 확인
     if (formData.password !== formData.confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.');
       return;
     }
 
-    // 회원가입 요청 (관리자 role 포함)
-    const signUpResult = await signUp({
+    // 관리자 회원가입 API 호출 (/api/users/admin/signup)
+    const signUpResult = await userApi.adminSignUp({
+      adminCode: formData.adminCode,
       email: formData.email,
       password: formData.password,
       name: formData.name,
       phone: formData.phone,
-      role: 'ADMIN',
     });
 
     if (signUpResult.success) {
