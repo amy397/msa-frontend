@@ -118,7 +118,7 @@ export default function AdminOrders() {
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">주문번호</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">주문일시</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">고객ID</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">고객이메일</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">상품</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">금액</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">현재상태</th>
@@ -132,7 +132,7 @@ export default function AdminOrders() {
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {new Date(order.createdAt).toLocaleString('ko-KR')}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{order.userId}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{order.userEmail || order.email || `ID: ${order.userId}`}</td>
                   <td className="px-4 py-3 text-sm">
                     {order.items?.length > 0 ? (
                       <span>
