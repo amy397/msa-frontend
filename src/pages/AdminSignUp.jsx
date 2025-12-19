@@ -41,12 +41,13 @@ export default function AdminSignUp() {
       return;
     }
 
-    // 회원가입 요청
+    // 회원가입 요청 (관리자 role 포함)
     const signUpResult = await signUp({
       email: formData.email,
       password: formData.password,
       name: formData.name,
       phone: formData.phone,
+      role: 'ADMIN',
     });
 
     if (signUpResult.success) {
