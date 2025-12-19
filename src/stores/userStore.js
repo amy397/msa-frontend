@@ -62,9 +62,9 @@ export const useUserStore = create(
             loading: false,
           });
 
-          // 사용자 정보 조회
-          if (payload?.sub) {
-            await get().fetchCurrentUser(payload.sub);
+          // 사용자 정보 조회 (payload.userId 사용)
+          if (payload?.userId) {
+            await get().fetchCurrentUser(payload.userId);
           }
         } else {
           set({ error: result.error, loading: false });
@@ -102,8 +102,8 @@ export const useUserStore = create(
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
             set({ isAuthenticated: true, token });
-            if (payload.sub) {
-              get().fetchCurrentUser(payload.sub);
+            if (payload.userId) {
+              get().fetchCurrentUser(payload.userId);
             }
           } else {
             // 토큰 만료
