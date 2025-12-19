@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useUser';
+import { useOrders } from '../hooks/useOrder';
 
 const STATUS_LABELS = {
   AVAILABLE: '판매중',
@@ -19,8 +20,10 @@ export default function ProductShop() {
   } = useProducts();
 
   const { isAuthenticated, currentUser } = useAuth();
+  const { createOrder } = useOrders();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [cart, setCart] = useState([]);
+  const [ordering, setOrdering] = useState(false);
 
   useEffect(() => {
     fetchAvailableProducts();
@@ -110,12 +113,40 @@ export default function ProductShop() {
               장바구니: {cart.length}개 상품, 총 {totalAmount.toLocaleString()}원
             </span>
             <button
-              onClick={() => {
-                alert('주문 기능은 추후 구현 예정입니다.');
+              onClick={async () => {
+                if (!currentUser?.id) {
+                  alert('로그인이 필요합니다.');
+                  return;
+                }
+                setOrdering(true);
+                try {
+                  const orderData = {
+                    userId: currentUser.id,
+                    items: cart.map(item => ({
+                      productId: item.id,
+                      productName: item.name,
+                      quantity: item.quantity,
+                      price: item.price,
+                    })),
+                    totalAmount: totalAmount,
+                  };
+                  const result = await createOrder(orderData);
+                  if (result.success) {
+                    alert('주문이 완료되었습니다!');
+                    setCart([]);
+                  } else {
+                    alert(result.error || '주문에 실패했습니다.');
+                  }
+                } catch (err) {
+                  alert('주문 중 오류가 발생했습니다.');
+                } finally {
+                  setOrdering(false);
+                }
               }}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              disabled={ordering}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
             >
-              주문하기
+              {ordering ? '주문 중...' : '주문하기'}
             </button>
           </div>
         </div>
