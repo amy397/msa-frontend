@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useUser';
 import { orderApi } from '../api/orderApi';
 
+// 백엔드 OrderStatus enum과 일치
 const STATUS_OPTIONS = [
   { value: 'PENDING', label: '주문 대기', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'PAID', label: '결제 완료', color: 'bg-blue-100 text-blue-800' },
-  { value: 'PREPARING', label: '상품 준비중', color: 'bg-purple-100 text-purple-800' },
+  { value: 'CONFIRMED', label: '주문 확정', color: 'bg-blue-100 text-blue-800' },
   { value: 'SHIPPING', label: '배송중', color: 'bg-indigo-100 text-indigo-800' },
   { value: 'DELIVERED', label: '배송 완료', color: 'bg-green-100 text-green-800' },
-  { value: 'COMPLETED', label: '주문 완료', color: 'bg-green-100 text-green-800' },
   { value: 'CANCELLED', label: '주문 취소', color: 'bg-red-100 text-red-800' },
 ];
 

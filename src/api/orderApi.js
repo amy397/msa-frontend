@@ -13,8 +13,8 @@ export const orderApi = {
 
   update: (id, data) => apiRequest('put', `${BASE_URL}/${id}`, data),
 
-  // 상태 변경 - PUT 메소드로 시도
-  updateStatus: (id, status) => apiRequest('put', `${BASE_URL}/${id}/status?status=${status}`),
+  // 상태 변경 - PATCH 메소드 + 쿼리 파라미터
+  updateStatus: (id, status) => apiRequest('patch', `${BASE_URL}/${id}/status?status=${status}`),
 
   delete: (id) => apiRequest('delete', `${BASE_URL}/${id}`),
 };
