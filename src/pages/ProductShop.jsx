@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useUser';
-import { useOrders } from '../hooks/useOrder';
+import { useCart } from '../hooks/useCart';
 
 const STATUS_LABELS = {
   AVAILABLE: '판매중',
@@ -10,6 +11,7 @@ const STATUS_LABELS = {
 };
 
 export default function ProductShop() {
+  const navigate = useNavigate();
   const {
     products,
     loading,
@@ -19,11 +21,9 @@ export default function ProductShop() {
     clearError,
   } = useProducts();
 
-  const { isAuthenticated, currentUser } = useAuth();
-  const { createOrder } = useOrders();
+  const { isAuthenticated } = useAuth();
+  const { items: cart, addItem, totalAmount, totalCount } = useCart();
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [cart, setCart] = useState([]);
-  const [ordering, setOrdering] = useState(false);
 
   useEffect(() => {
     fetchAvailableProducts();
@@ -40,28 +40,13 @@ export default function ProductShop() {
   const handleAddToCart = (product) => {
     if (!isAuthenticated) {
       alert('로그인이 필요합니다.');
+      navigate('/login');
       return;
     }
 
-    const existing = cart.find((item) => item.id === product.id);
-    if (existing) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
+    addItem(product);
     alert(`${product.name}이(가) 장바구니에 추가되었습니다.`);
   };
-
-  const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
 
   return (
     <div className="container mx-auto p-6">
@@ -106,47 +91,17 @@ export default function ProductShop() {
       </div>
 
       {/* 장바구니 요약 */}
-      {cart.length > 0 && (
+      {totalCount > 0 && (
         <div className="bg-blue-50 p-4 rounded-lg shadow mb-6">
           <div className="flex justify-between items-center">
             <span className="font-bold">
-              장바구니: {cart.length}개 상품, 총 {totalAmount.toLocaleString()}원
+              장바구니: {totalCount}개 상품, 총 {totalAmount.toLocaleString()}원
             </span>
             <button
-              onClick={async () => {
-                if (!currentUser?.id) {
-                  alert('로그인이 필요합니다.');
-                  return;
-                }
-                setOrdering(true);
-                try {
-                  const orderData = {
-                    userId: currentUser.id,
-                    items: cart.map(item => ({
-                      productId: item.id,
-                      productName: item.name,
-                      quantity: item.quantity,
-                      price: item.price,
-                    })),
-                    totalAmount: totalAmount,
-                  };
-                  const result = await createOrder(orderData);
-                  if (result.success) {
-                    alert('주문이 완료되었습니다!');
-                    setCart([]);
-                  } else {
-                    alert(result.error || '주문에 실패했습니다.');
-                  }
-                } catch (err) {
-                  alert('주문 중 오류가 발생했습니다.');
-                } finally {
-                  setOrdering(false);
-                }
-              }}
-              disabled={ordering}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+              onClick={() => navigate('/checkout')}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              {ordering ? '주문 중...' : '주문하기'}
+              주문하기
             </button>
           </div>
         </div>

@@ -40,8 +40,11 @@ export const userApi = {
   // 로그인
   login: (data) => apiRequest('post', `${BASE_URL}/login`, data),
 
-  // 사용자 조회
+  // 사용자 조회 (ID)
   getById: (id) => apiRequest('get', `${BASE_URL}/${id}`),
+
+  // 사용자 조회 (이메일)
+  getByEmail: (email) => apiRequest('get', `${BASE_URL}/email/${email}`),
 
   // 전체 사용자 조회
   getAll: () => apiRequest('get', BASE_URL),

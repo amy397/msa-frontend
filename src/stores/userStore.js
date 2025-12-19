@@ -46,25 +46,62 @@ export const useUserStore = create(
 
       // 로그인
       login: async (data) => {
-        set({ loading: true, error: null });
+        set({ loading: true, error: null, currentUser: null });  // 이전 사용자 정보 초기화
         const result = await userApi.login(data);
 
+        console.log('🔍 로그인 응답 전체:', JSON.stringify(result, null, 2));
+
         if (result.success) {
-          const { accessToken } = result.data;
+          const { accessToken, user } = result.data;
+          console.log('🔍 user 필드:', user);
           localStorage.setItem('token', accessToken);
 
-          // 토큰에서 사용자 정보 파싱
-          const payload = parseToken(accessToken);
+          // 로그인 응답에 user 정보가 있으면 바로 사용
+          if (user) {
+            set({
+              isAuthenticated: true,
+              token: accessToken,
+              currentUser: user,
+              loading: false,
+            });
+          } else {
+            // user 정보가 없으면 토큰에서 파싱
+            const payload = parseToken(accessToken);
+            console.log('🔍 JWT payload:', payload);
 
-          set({
-            isAuthenticated: true,
-            token: accessToken,
-            loading: false,
-          });
+            const email = payload?.sub;
 
-          // 사용자 정보 조회 (payload.userId 사용)
-          if (payload?.userId) {
-            await get().fetchCurrentUser(payload.userId);
+            // API로 사용자 정보 조회 시도
+            let userFound = false;
+            if (email) {
+              const result = await userApi.getByEmail(email);
+              if (result.success) {
+                set({
+                  isAuthenticated: true,
+                  token: accessToken,
+                  currentUser: result.data,
+                  loading: false,
+                });
+                userFound = true;
+              }
+            }
+
+            // API 실패 시 토큰에서 최소한의 사용자 정보 생성
+            if (!userFound) {
+              console.log('⚠️ API 조회 실패, 토큰에서 사용자 정보 생성');
+              const tempUser = {
+                id: payload?.userId || payload?.id || 0,
+                email: email || '',
+                name: payload?.name || email?.split('@')[0] || '사용자',
+                role: payload?.role || 'USER',
+              };
+              set({
+                isAuthenticated: true,
+                token: accessToken,
+                currentUser: tempUser,
+                loading: false,
+              });
+            }
           }
         } else {
           set({ error: result.error, loading: false });
@@ -86,9 +123,18 @@ export const useUserStore = create(
       // 관리자 모드 설정 (테스트용)
       setAdminMode: (value) => set({ isAdminMode: value }),
 
-      // 현재 사용자 정보 조회
+      // 현재 사용자 정보 조회 (ID로)
       fetchCurrentUser: async (id) => {
         const result = await userApi.getById(id);
+        if (result.success) {
+          set({ currentUser: result.data });
+        }
+        return result;
+      },
+
+      // 현재 사용자 정보 조회 (이메일로)
+      fetchCurrentUserByEmail: async (email) => {
+        const result = await userApi.getByEmail(email);
         if (result.success) {
           set({ currentUser: result.data });
         }
@@ -101,10 +147,8 @@ export const useUserStore = create(
         if (token) {
           const payload = parseToken(token);
           if (payload && payload.exp * 1000 > Date.now()) {
+            // 토큰 유효 - persist된 currentUser 사용 (API 호출 안함)
             set({ isAuthenticated: true, token });
-            if (payload.userId) {
-              get().fetchCurrentUser(payload.userId);
-            }
           } else {
             // 토큰 만료
             localStorage.removeItem('token');
