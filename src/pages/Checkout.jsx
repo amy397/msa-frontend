@@ -57,7 +57,6 @@ export default function Checkout() {
       }
 
       setShowBankInfo(true);
-      clearCart();
     } catch (err) {
       console.error('주문 오류:', err);
       setError(err.message || '주문 처리 중 오류가 발생했습니다.');
@@ -311,13 +310,13 @@ export default function Checkout() {
             </p>
             <div className="flex gap-2">
               <button
-                onClick={() => navigate('/orders')}
+                onClick={() => { clearCart(); navigate('/orders'); }}
                 className="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 주문내역 보기
               </button>
               <button
-                onClick={() => navigate('/products')}
+                onClick={() => { clearCart(); navigate('/products'); }}
                 className="flex-1 py-2 border rounded hover:bg-gray-50"
               >
                 쇼핑 계속하기
