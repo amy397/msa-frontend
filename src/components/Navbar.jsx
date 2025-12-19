@@ -45,6 +45,9 @@ function Navbar() {
           {/* 관리자 전용 메뉴 */}
           {isAdmin && (
             <>
+              <Link to="/admin/orders" className="hover:text-blue-200">
+                주문관리
+              </Link>
               <Link to="/admin/products" className="hover:text-blue-200">
                 상품관리
               </Link>

@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFail from './pages/PaymentFail';
 import OrderHistory from './pages/OrderHistory';
+import AdminOrders from './pages/AdminOrders';
 import { useUserStore } from './stores/userStore';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
           {/* 관리자 전용 */}
           <Route path="/admin/products" element={<ProductAdmin />} />
           <Route path="/admin/users" element={<UserList />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
         </Routes>
       </div>
     </BrowserRouter>
