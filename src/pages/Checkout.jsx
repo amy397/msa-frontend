@@ -40,6 +40,7 @@ export default function Checkout() {
     try {
       const orderData = {
         userId: currentUser.id,
+        email: currentUser.email,
         items: items.map((item) => ({
           productId: item.id,
           productName: item.name,
@@ -78,6 +79,7 @@ export default function Checkout() {
     try {
       const orderData = {
         userId: currentUser.id,
+        email: currentUser.email,
         items: items.map((item) => ({
           productId: item.id,
           productName: item.name,
