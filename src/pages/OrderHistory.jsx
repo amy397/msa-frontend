@@ -132,7 +132,7 @@ export default function OrderHistory() {
                   총 {order.items?.reduce((sum, item) => sum + item.quantity, 0)}개 상품
                 </span>
                 <span className="text-lg font-bold text-blue-600">
-                  {Number(order.totalAmount).toLocaleString()}원
+                  {(order.totalAmount || order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0).toLocaleString()}원
                 </span>
               </div>
             </div>
