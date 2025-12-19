@@ -11,6 +11,8 @@ export default function Checkout() {
   const { isAuthenticated, currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'bank'
+  const [showBankInfo, setShowBankInfo] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -25,7 +27,8 @@ export default function Checkout() {
     }
   }, [items, navigate]);
 
-  const handlePayment = async () => {
+  // 무통장입금 처리
+  const handleBankTransfer = async () => {
     if (!currentUser) {
       alert('사용자 정보를 불러올 수 없습니다.');
       return;
@@ -35,7 +38,45 @@ export default function Checkout() {
     setError(null);
 
     try {
-      // 1. 주문 생성
+      const orderData = {
+        userId: currentUser.id,
+        items: items.map((item) => ({
+          productId: item.id,
+          productName: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        totalAmount,
+        paymentMethod: 'BANK_TRANSFER',
+        status: 'PENDING_PAYMENT',
+      };
+
+      const orderResult = await orderApi.create(orderData);
+      if (!orderResult.success) {
+        throw new Error(orderResult.error || '주문 생성에 실패했습니다.');
+      }
+
+      setShowBankInfo(true);
+      clearCart();
+    } catch (err) {
+      console.error('주문 오류:', err);
+      setError(err.message || '주문 처리 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 카드 결제 처리
+  const handleCardPayment = async () => {
+    if (!currentUser) {
+      alert('사용자 정보를 불러올 수 없습니다.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
       const orderData = {
         userId: currentUser.id,
         items: items.map((item) => ({
@@ -57,7 +98,6 @@ export default function Checkout() {
         ? `${items[0].name} 외 ${items.length - 1}건`
         : items[0].name;
 
-      // 2. Toss Payments 결제창 호출
       const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY;
       if (!clientKey) {
         throw new Error('결제 설정이 올바르지 않습니다.');
@@ -85,6 +125,14 @@ export default function Checkout() {
       setError(err.message || '결제 처리 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePayment = () => {
+    if (paymentMethod === 'bank') {
+      handleBankTransfer();
+    } else {
+      handleCardPayment();
     }
   };
 
@@ -192,6 +240,39 @@ export default function Checkout() {
         </div>
       </div>
 
+      {/* 결제 수단 선택 */}
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-bold">결제 수단</h2>
+        </div>
+        <div className="p-4 flex gap-4">
+          <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition ${paymentMethod === 'card' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="card"
+              checked={paymentMethod === 'card'}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="mr-2"
+            />
+            <span className="font-medium">카드 결제</span>
+            <p className="text-sm text-gray-500 mt-1">토스페이먼츠</p>
+          </label>
+          <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition ${paymentMethod === 'bank' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="bank"
+              checked={paymentMethod === 'bank'}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="mr-2"
+            />
+            <span className="font-medium">무통장입금</span>
+            <p className="text-sm text-gray-500 mt-1">테스트용</p>
+          </label>
+        </div>
+      </div>
+
       {/* 결제 버튼 */}
       <div className="flex gap-4">
         <button
@@ -205,9 +286,45 @@ export default function Checkout() {
           disabled={loading}
           className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
         >
-          {loading ? '결제 처리 중...' : `${totalAmount.toLocaleString()}원 결제하기`}
+          {loading ? '처리 중...' : paymentMethod === 'bank' ? '주문하기' : `${totalAmount.toLocaleString()}원 결제하기`}
         </button>
       </div>
+
+      {/* 무통장입금 안내 모달 */}
+      {showBankInfo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4 text-center">주문이 완료되었습니다!</h2>
+            <div className="bg-gray-100 p-4 rounded-lg mb-4">
+              <h3 className="font-bold mb-2">무통장입금 계좌 정보</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="text-gray-600">은행:</span> <span className="font-medium">테스트은행</span></p>
+                <p><span className="text-gray-600">계좌번호:</span> <span className="font-medium">123-456-789012</span></p>
+                <p><span className="text-gray-600">예금주:</span> <span className="font-medium">테스트샵</span></p>
+                <p><span className="text-gray-600">입금금액:</span> <span className="font-bold text-blue-600">{totalAmount.toLocaleString()}원</span></p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mb-4 text-center">
+              위 계좌로 입금해주시면 주문이 확정됩니다.<br/>
+              (테스트용이므로 실제 입금은 필요 없습니다)
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate('/orders')}
+                className="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                주문내역 보기
+              </button>
+              <button
+                onClick={() => navigate('/products')}
+                className="flex-1 py-2 border rounded hover:bg-gray-50"
+              >
+                쇼핑 계속하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
