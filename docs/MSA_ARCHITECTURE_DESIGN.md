@@ -351,7 +351,224 @@
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Network Policies (네트워크 보안)
+### 4.2 Frontend 포함 전체 트래픽 흐름
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    Complete Traffic Flow (Frontend to Backend)                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│   ┌──────────────────┐                                                          │
+│   │   사용자 브라우저  │                                                          │
+│   │  (External User) │                                                          │
+│   └────────┬─────────┘                                                          │
+│            │                                                                    │
+│            │ ① HTTPS Request: https://shop.example.com                         │
+│            ▼                                                                    │
+│   ┌────────────────────────────────────────────────────────────────────────┐    │
+│   │                        Ingress Controller                              │    │
+│   │                      (NGINX / Traefik)                                 │    │
+│   │                                                                        │    │
+│   │   Host: shop.example.com  →  frontend-svc:3000 (React SPA)             │    │
+│   │   Path: /api/*            →  gateway-svc:9090 (API Gateway)            │    │
+│   └────────────────────┬──────────────────────────┬────────────────────────┘    │
+│                        │                          │                             │
+│          ② 정적 파일 요청                    ③ API 요청                          │
+│          (HTML, JS, CSS)                   (/api/*)                            │
+│                        │                          │                             │
+│                        ▼                          ▼                             │
+│   ┌──────────────────────────┐    ┌──────────────────────────────────────┐      │
+│   │     Frontend Pod         │    │          Gateway Pod                 │      │
+│   │   (React App - Nginx)    │    │     (Spring Cloud Gateway)           │      │
+│   │                          │    │                                      │      │
+│   │  ┌────────────────────┐  │    │   Route Rules:                       │      │
+│   │  │  Static Files:     │  │    │   /api/users/**   → user-svc:8081    │      │
+│   │  │  - index.html      │  │    │   /api/products/**→ product-svc:8082 │      │
+│   │  │  - main.js         │  │    │   /api/orders/**  → order-svc:8083   │      │
+│   │  │  - styles.css      │  │    │   /api/payments/**→ payment-svc:8084 │      │
+│   │  └────────────────────┘  │    │                                      │      │
+│   │                          │    │   JWT Validation (각 요청마다)        │      │
+│   │  Nginx Config:           │    └──────────────────┬───────────────────┘      │
+│   │  - SPA fallback          │                       │                          │
+│   │  - Gzip compression      │                       ▼                          │
+│   └──────────────────────────┘    ┌──────────────────────────────────────┐      │
+│            │                      │         Backend Services              │      │
+│            │                      │                                      │      │
+│            │                      │  ┌──────────┐  ┌──────────┐          │      │
+│            ▼                      │  │user-svc  │  │product-  │          │      │
+│   ④ React SPA 로드 완료           │  │  :8081   │  │svc:8082  │          │      │
+│   브라우저에서 JavaScript 실행     │  └────┬─────┘  └────┬─────┘          │      │
+│            │                      │       │             │                │      │
+│            │                      │  ┌──────────┐  ┌──────────┐          │      │
+│            │                      │  │order-svc │  │payment-  │          │      │
+│            ▼                      │  │  :8083   │  │svc:8084  │          │      │
+│   ⑤ 사용자 액션 (로그인, 주문 등)  │  └────┬─────┘  └────┬─────┘          │      │
+│            │                      │       │             │                │      │
+│            │                      └───────┼─────────────┼────────────────┘      │
+│            │                              │             │                       │
+│            └──────────────────────────────┼─────────────┘                       │
+│                                           ▼                                     │
+│                               ┌──────────────────────┐                          │
+│                               │   MySQL Databases    │                          │
+│                               │   (Namespace: db)    │                          │
+│                               └──────────────────────┘                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+                              트래픽 흐름 상세 설명
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  단계  │  설명                                                                  │
+├────────┼────────────────────────────────────────────────────────────────────────┤
+│   ①   │  사용자가 https://shop.example.com 접속                                │
+│        │  Ingress Controller가 요청 수신                                        │
+├────────┼────────────────────────────────────────────────────────────────────────┤
+│   ②   │  정적 파일 요청 (/, /products, /login 등)                              │
+│        │  → frontend-svc로 라우팅 → React 빌드 파일(index.html, JS) 반환        │
+├────────┼────────────────────────────────────────────────────────────────────────┤
+│   ③   │  API 요청 (/api/*)                                                     │
+│        │  → gateway-svc로 라우팅 → 각 마이크로서비스로 프록시                    │
+├────────┼────────────────────────────────────────────────────────────────────────┤
+│   ④   │  브라우저에서 React SPA 실행                                           │
+│        │  - Zustand 스토어 초기화                                              │
+│        │  - localStorage에서 JWT 토큰 복원                                     │
+│        │  - React Router로 클라이언트 라우팅                                   │
+├────────┼────────────────────────────────────────────────────────────────────────┤
+│   ⑤   │  사용자 액션 시 Axios로 API 호출                                       │
+│        │  - Authorization: Bearer <JWT> 헤더 자동 첨부                         │
+│        │  - 요청: Browser → Ingress → Gateway → Service → DB                   │
+│        │  - 응답: DB → Service → Gateway → Ingress → Browser                   │
+└────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+### 4.2.1 Frontend Kubernetes 배포 구성
+
+```yaml
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: msa-shop
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: msa-shop/frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+# frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: msa-shop
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 3000
+    targetPort: 80
+  type: ClusterIP
+---
+# ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: msa-shop-ingress
+  namespace: msa-shop
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - shop.example.com
+    secretName: shop-tls-secret
+  rules:
+  - host: shop.example.com
+    http:
+      paths:
+      # API 요청은 Gateway로 라우팅
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-svc
+            port:
+              number: 9090
+      # 나머지 모든 요청은 Frontend로 라우팅
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-svc
+            port:
+              number: 3000
+```
+
+### 4.2.2 Frontend Dockerfile (Production Build)
+
+```dockerfile
+# Build Stage
+FROM node:18-alpine as build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Production Stage
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+```nginx
+# nginx.conf - SPA 라우팅 지원
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Gzip 압축
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+
+    # SPA fallback - 모든 경로를 index.html로
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 정적 파일 캐싱
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+### 4.3 Network Policies (네트워크 보안)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
