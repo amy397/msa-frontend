@@ -41,6 +41,7 @@ export default function ProductAdmin() {
     price: '',
     stock: '',
     category: '',
+    imageUrl: '',
   });
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function ProductAdmin() {
 
   const openCreateModal = () => {
     setEditingProduct(null);
-    setFormData({ name: '', description: '', price: '', stock: '', category: '' });
+    setFormData({ name: '', description: '', price: '', stock: '', category: '', imageUrl: '' });
     setShowModal(true);
   };
 
@@ -96,6 +97,7 @@ export default function ProductAdmin() {
       price: product.price,
       stock: product.stock,
       category: product.category || '',
+      imageUrl: product.imageUrl || '',
     });
     setShowModal(true);
   };
@@ -220,6 +222,26 @@ export default function ProductAdmin() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((product) => (
             <div key={product.id} className="bg-white p-4 rounded-lg shadow">
+              {/* 상품 이미지 */}
+              <div className="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span
+                  className={`text-gray-400 ${product.imageUrl ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+                >
+                  이미지 없음
+                </span>
+              </div>
+
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{product.name}</h3>
                 <span
@@ -347,6 +369,29 @@ export default function ProductAdmin() {
                   className="w-full px-3 py-2 border rounded"
                   placeholder="예: 전자제품, 의류, 식품"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">이미지 URL</label>
+                <input
+                  type="url"
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="https://example.com/image.jpg"
+                />
+                {formData.imageUrl && (
+                  <div className="mt-2 h-24 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                    <img
+                      src={formData.imageUrl}
+                      alt="미리보기"
+                      className="max-h-full max-w-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 pt-4">

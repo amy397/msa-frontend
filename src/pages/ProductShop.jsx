@@ -116,8 +116,23 @@ export default function ProductShop() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {products.map((product) => (
             <div key={product.id} className="bg-white p-4 rounded-lg shadow">
-              <div className="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-400">
-                상품 이미지
+              <div className="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span
+                  className={`text-gray-400 ${product.imageUrl ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+                >
+                  상품 이미지
+                </span>
               </div>
 
               <h3 className="font-bold text-lg mb-1">{product.name}</h3>
