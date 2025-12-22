@@ -43,6 +43,33 @@ export default function ProductAdmin() {
     category: '',
     imageUrl: '',
   });
+  const [imagePreview, setImagePreview] = useState('');
+
+  // 이미지 파일을 Base64로 변환
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 파일 크기 체크 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setFormData({ ...formData, imageUrl: base64String });
+        setImagePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 이미지 삭제
+  const handleImageRemove = () => {
+    setFormData({ ...formData, imageUrl: '' });
+    setImagePreview('');
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -86,6 +113,7 @@ export default function ProductAdmin() {
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormData({ name: '', description: '', price: '', stock: '', category: '', imageUrl: '' });
+    setImagePreview('');
     setShowModal(true);
   };
 
@@ -99,6 +127,7 @@ export default function ProductAdmin() {
       category: product.category || '',
       imageUrl: product.imageUrl || '',
     });
+    setImagePreview(product.imageUrl || '');
     setShowModal(true);
   };
 
@@ -372,26 +401,34 @@ export default function ProductAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">이미지 URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="https://example.com/image.jpg"
-                />
-                {formData.imageUrl && (
-                  <div className="mt-2 h-24 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-                    <img
-                      src={formData.imageUrl}
-                      alt="미리보기"
-                      className="max-h-full max-w-full object-contain"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+                <label className="block text-sm font-medium mb-1">상품 이미지</label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-3 py-2 border rounded text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="text-xs text-gray-500">JPG, PNG, GIF 형식 (최대 5MB)</p>
+                  {imagePreview && (
+                    <div className="relative">
+                      <div className="h-32 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                        <img
+                          src={imagePreview}
+                          alt="미리보기"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleImageRemove}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                      >
+                        X
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4">
