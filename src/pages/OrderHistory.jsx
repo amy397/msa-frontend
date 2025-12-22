@@ -146,8 +146,16 @@ export default function OrderHistory() {
               <div className="p-4">
                 {order.items?.map((item, index) => (
                   <div key={index} className="flex items-center gap-4 py-2">
-                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
-                      이미지
+                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                      {item.productImageUrl ? (
+                        <img
+                          src={item.productImageUrl}
+                          alt={item.productName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-xs">이미지</span>
+                      )}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">{item.productName}</p>
