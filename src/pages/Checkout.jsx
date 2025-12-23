@@ -199,9 +199,17 @@ export default function Checkout() {
         <div className="divide-y">
           {items.map((item) => (
             <div key={item.id} className="p-4 flex items-center gap-4">
-              <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-sm">
-                이미지
-              </div>
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="w-20 h-20 object-cover rounded"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-sm">
+                  이미지
+                </div>
+              )}
               <div className="flex-1">
                 <h3 className="font-bold">{item.name}</h3>
                 <p className="text-gray-600 text-sm">{item.description}</p>

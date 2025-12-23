@@ -116,9 +116,17 @@ export default function ProductShop() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {products.map((product) => (
             <div key={product.id} className="bg-white p-4 rounded-lg shadow">
-              <div className="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-400">
-                상품 이미지
-              </div>
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-32 object-cover rounded mb-3"
+                />
+              ) : (
+                <div className="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-400">
+                  이미지 없음
+                </div>
+              )}
 
               <h3 className="font-bold text-lg mb-1">{product.name}</h3>
 

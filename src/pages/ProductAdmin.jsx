@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useProducts } from '../hooks/useProducts';
+import { productApi } from '../api/productApi';
 
 const STATUS_LABELS = {
   AVAILABLE: '판매중',
@@ -41,7 +42,11 @@ export default function ProductAdmin() {
     price: '',
     stock: '',
     category: '',
+    imageUrl: '',
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -84,7 +89,9 @@ export default function ProductAdmin() {
 
   const openCreateModal = () => {
     setEditingProduct(null);
-    setFormData({ name: '', description: '', price: '', stock: '', category: '' });
+    setFormData({ name: '', description: '', price: '', stock: '', category: '', imageUrl: '' });
+    setImageFile(null);
+    setImagePreview(null);
     setShowModal(true);
   };
 
@@ -96,16 +103,45 @@ export default function ProductAdmin() {
       price: product.price,
       stock: product.stock,
       category: product.category || '',
+      imageUrl: product.imageUrl || '',
     });
+    setImageFile(null);
+    setImagePreview(product.imageUrl || null);
     setShowModal(true);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let imageUrl = formData.imageUrl;
+
+    // 새 이미지가 있으면 먼저 업로드
+    if (imageFile) {
+      setUploadingImage(true);
+      const uploadResult = await productApi.uploadImage(imageFile);
+      setUploadingImage(false);
+
+      if (uploadResult.success && uploadResult.data.imageUrl) {
+        imageUrl = uploadResult.data.imageUrl;
+      } else {
+        alert('이미지 업로드에 실패했습니다: ' + (uploadResult.error || ''));
+        return;
+      }
+    }
+
     const data = {
       ...formData,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock),
+      imageUrl,
     };
 
     if (editingProduct) {
@@ -114,6 +150,8 @@ export default function ProductAdmin() {
       await createProduct(data);
     }
     setShowModal(false);
+    setImageFile(null);
+    setImagePreview(null);
     await fetchProducts();
   };
 
@@ -220,6 +258,18 @@ export default function ProductAdmin() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((product) => (
             <div key={product.id} className="bg-white p-4 rounded-lg shadow">
+              {/* 상품 이미지 */}
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-32 object-cover rounded mb-3"
+                />
+              ) : (
+                <div className="w-full h-32 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-400">
+                  이미지 없음
+                </div>
+              )}
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{product.name}</h3>
                 <span
@@ -349,6 +399,25 @@ export default function ProductAdmin() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-1">상품 이미지</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img
+                      src={imagePreview}
+                      alt="미리보기"
+                      className="w-32 h-32 object-cover rounded border"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2 pt-4">
                 <button
                   type="button"
@@ -359,10 +428,10 @@ export default function ProductAdmin() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || uploadingImage}
                   className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
                 >
-                  {loading ? '처리 중...' : editingProduct ? '수정' : '등록'}
+                  {uploadingImage ? '이미지 업로드 중...' : loading ? '처리 중...' : editingProduct ? '수정' : '등록'}
                 </button>
               </div>
             </form>

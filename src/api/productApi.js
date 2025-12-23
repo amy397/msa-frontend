@@ -67,4 +67,29 @@ export const productApi = {
 
   // 헬스체크
   health: () => apiRequest('get', `${BASE_URL}/health`),
+
+  // 이미지 업로드
+  uploadImage: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL}/images/upload`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, error: data.error || '이미지 업로드 실패' };
+      }
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message || '이미지 업로드 실패' };
+    }
+  },
 };
