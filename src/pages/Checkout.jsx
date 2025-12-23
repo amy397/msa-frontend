@@ -13,6 +13,13 @@ export default function Checkout() {
   const [error, setError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'bank'
   const [showBankInfo, setShowBankInfo] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    recipientName: '',
+    phone: '',
+    zipCode: '',
+    address: '',
+    addressDetail: '',
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -27,10 +34,36 @@ export default function Checkout() {
     }
   }, [items, navigate, showBankInfo]);
 
+  const handleShippingChange = (e) => {
+    const { name, value } = e.target;
+    setShippingAddress((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validateShippingAddress = () => {
+    const { recipientName, phone, address } = shippingAddress;
+    if (!recipientName.trim()) {
+      setError('수령인 이름을 입력해주세요.');
+      return false;
+    }
+    if (!phone.trim()) {
+      setError('연락처를 입력해주세요.');
+      return false;
+    }
+    if (!address.trim()) {
+      setError('배송지 주소를 입력해주세요.');
+      return false;
+    }
+    return true;
+  };
+
   // 무통장입금 처리
   const handleBankTransfer = async () => {
     if (!currentUser) {
       alert('사용자 정보를 불러올 수 없습니다.');
+      return;
+    }
+
+    if (!validateShippingAddress()) {
       return;
     }
 
@@ -48,6 +81,7 @@ export default function Checkout() {
           price: item.price,
         })),
         totalAmount,
+        shippingAddress,
         paymentMethod: 'BANK_TRANSFER',
         status: 'PENDING_PAYMENT',
       };
@@ -73,6 +107,10 @@ export default function Checkout() {
       return;
     }
 
+    if (!validateShippingAddress()) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -87,6 +125,7 @@ export default function Checkout() {
           price: item.price,
         })),
         totalAmount,
+        shippingAddress,
       };
 
       const orderResult = await orderApi.create(orderData);
@@ -216,6 +255,78 @@ export default function Checkout() {
               <label className="block text-sm text-gray-600 mb-1">이메일</label>
               <p className="font-medium">{currentUser?.email || '-'}</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 배송지 정보 */}
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-bold">배송지 정보</h2>
+        </div>
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                수령인 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="recipientName"
+                value={shippingAddress.recipientName}
+                onChange={handleShippingChange}
+                placeholder="수령인 이름"
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                연락처 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={shippingAddress.phone}
+                onChange={handleShippingChange}
+                placeholder="010-0000-0000"
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">우편번호</label>
+            <input
+              type="text"
+              name="zipCode"
+              value={shippingAddress.zipCode}
+              onChange={handleShippingChange}
+              placeholder="우편번호"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              주소 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="address"
+              value={shippingAddress.address}
+              onChange={handleShippingChange}
+              placeholder="기본 주소"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">상세 주소</label>
+            <input
+              type="text"
+              name="addressDetail"
+              value={shippingAddress.addressDetail}
+              onChange={handleShippingChange}
+              placeholder="상세 주소 (동/호수 등)"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
       </div>
