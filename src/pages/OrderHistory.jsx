@@ -172,6 +172,28 @@ export default function OrderHistory() {
                 ))}
               </div>
 
+              {/* 배송지 정보 */}
+              {order.shippingAddress && (
+                <div className="px-4 pb-4">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <h4 className="text-sm font-bold text-gray-700 mb-2">배송지 정보</h4>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>
+                        <span className="font-medium">{order.shippingAddress.recipientName}</span>
+                        {order.shippingAddress.phone && (
+                          <span className="ml-2">{order.shippingAddress.phone}</span>
+                        )}
+                      </p>
+                      <p>
+                        {order.shippingAddress.zipCode && `[${order.shippingAddress.zipCode}] `}
+                        {order.shippingAddress.address}
+                        {order.shippingAddress.addressDetail && `, ${order.shippingAddress.addressDetail}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 주문 요약 */}
               <div className="p-4 bg-gray-50 rounded-b-lg flex justify-between items-center">
                 <span className="font-medium">
