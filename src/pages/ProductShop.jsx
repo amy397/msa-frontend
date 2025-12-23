@@ -98,10 +98,10 @@ export default function ProductShop() {
               장바구니: {totalCount}개 상품, 총 {totalAmount.toLocaleString()}원
             </span>
             <button
-              onClick={() => navigate('/checkout')}
+              onClick={() => navigate('/cart')}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              주문하기
+              장바구니 보기
             </button>
           </div>
         </div>

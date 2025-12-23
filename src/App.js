@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import AdminSignUp from './pages/AdminSignUp';
 import Checkout from './pages/Checkout';
+import Cart from './pages/Cart';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFail from './pages/PaymentFail';
 import OrderHistory from './pages/OrderHistory';
@@ -35,6 +36,7 @@ function App() {
 
           {/* 일반 사용자 - 상품 조회/구매 */}
           <Route path="/products" element={<ProductShop />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/fail" element={<PaymentFail />} />
