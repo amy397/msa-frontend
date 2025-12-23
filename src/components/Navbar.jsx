@@ -29,7 +29,7 @@ function Navbar() {
           {/* 일반 사용자만 - 장바구니, 주문내역 */}
           {isAuthenticated && !isAdmin && (
             <>
-              <Link to="/checkout" className="hover:text-blue-200 relative">
+              <Link to="/cart" className="hover:text-blue-200 relative">
                 장바구니
                 {totalCount > 0 && (
                   <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
