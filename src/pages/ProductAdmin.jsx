@@ -44,9 +44,39 @@ export default function ProductAdmin() {
     category: '',
     imageUrl: '',
   });
+<<<<<<< HEAD
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+=======
+  const [imagePreview, setImagePreview] = useState('');
+
+  // 이미지 파일을 Base64로 변환
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 파일 크기 체크 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setFormData({ ...formData, imageUrl: base64String });
+        setImagePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 이미지 삭제
+  const handleImageRemove = () => {
+    setFormData({ ...formData, imageUrl: '' });
+    setImagePreview('');
+  };
+>>>>>>> 7e734a2760bf1df37ebd0d34d72e556aec38c995
 
   useEffect(() => {
     fetchProducts();
@@ -90,8 +120,12 @@ export default function ProductAdmin() {
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormData({ name: '', description: '', price: '', stock: '', category: '', imageUrl: '' });
+<<<<<<< HEAD
     setImageFile(null);
     setImagePreview(null);
+=======
+    setImagePreview('');
+>>>>>>> 7e734a2760bf1df37ebd0d34d72e556aec38c995
     setShowModal(true);
   };
 
@@ -105,8 +139,12 @@ export default function ProductAdmin() {
       category: product.category || '',
       imageUrl: product.imageUrl || '',
     });
+<<<<<<< HEAD
     setImageFile(null);
     setImagePreview(product.imageUrl || null);
+=======
+    setImagePreview(product.imageUrl || '');
+>>>>>>> 7e734a2760bf1df37ebd0d34d72e556aec38c995
     setShowModal(true);
   };
 
@@ -259,6 +297,7 @@ export default function ProductAdmin() {
           {products.map((product) => (
             <div key={product.id} className="bg-white p-4 rounded-lg shadow">
               {/* 상품 이미지 */}
+<<<<<<< HEAD
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
@@ -270,6 +309,27 @@ export default function ProductAdmin() {
                   이미지 없음
                 </div>
               )}
+=======
+              <div className="h-32 bg-gray-200 rounded mb-3 flex items-center justify-center overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span
+                  className={`text-gray-400 ${product.imageUrl ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+                >
+                  이미지 없음
+                </span>
+              </div>
+
+>>>>>>> 7e734a2760bf1df37ebd0d34d72e556aec38c995
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{product.name}</h3>
                 <span
@@ -401,6 +461,7 @@ export default function ProductAdmin() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">상품 이미지</label>
+<<<<<<< HEAD
                 <input
                   type="file"
                   accept="image/*"
@@ -416,6 +477,35 @@ export default function ProductAdmin() {
                     />
                   </div>
                 )}
+=======
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-3 py-2 border rounded text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="text-xs text-gray-500">JPG, PNG, GIF 형식 (최대 5MB)</p>
+                  {imagePreview && (
+                    <div className="relative">
+                      <div className="h-32 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                        <img
+                          src={imagePreview}
+                          alt="미리보기"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleImageRemove}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                      >
+                        X
+                      </button>
+                    </div>
+                  )}
+                </div>
+>>>>>>> 7e734a2760bf1df37ebd0d34d72e556aec38c995
               </div>
 
               <div className="flex gap-2 pt-4">

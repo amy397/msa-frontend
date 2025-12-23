@@ -15,6 +15,7 @@ const BASE_URL = '/api/products';
  * @property {number} price
  * @property {number} stock
  * @property {string} category
+ * @property {string} [imageUrl]
  * @property {ProductStatus} status
  * @property {string} createdAt
  * @property {string} updatedAt
@@ -27,6 +28,7 @@ const BASE_URL = '/api/products';
  * @property {number} price
  * @property {number} stock
  * @property {string} [category]
+ * @property {string} [imageUrl]
  */
 
 /**

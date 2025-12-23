@@ -79,6 +79,7 @@ export default function Checkout() {
           productName: item.name,
           quantity: item.quantity,
           price: item.price,
+          productImageUrl: item.imageUrl || '',
         })),
         totalAmount,
         shippingAddress,
@@ -123,6 +124,7 @@ export default function Checkout() {
           productName: item.name,
           quantity: item.quantity,
           price: item.price,
+          productImageUrl: item.imageUrl || '',
         })),
         totalAmount,
         shippingAddress,
@@ -199,6 +201,7 @@ export default function Checkout() {
         <div className="divide-y">
           {items.map((item) => (
             <div key={item.id} className="p-4 flex items-center gap-4">
+<<<<<<< HEAD
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
@@ -210,6 +213,19 @@ export default function Checkout() {
                   이미지
                 </div>
               )}
+=======
+              <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-sm">이미지</span>
+                )}
+              </div>
+>>>>>>> 7e734a2760bf1df37ebd0d34d72e556aec38c995
               <div className="flex-1">
                 <h3 className="font-bold">{item.name}</h3>
                 <p className="text-gray-600 text-sm">{item.description}</p>
