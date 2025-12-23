@@ -120,6 +120,7 @@ export default function AdminOrders() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">주문일시</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">고객이메일</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">상품</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">배송지</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">금액</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">현재상태</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">상태변경</th>
@@ -140,6 +141,19 @@ export default function AdminOrders() {
                         {order.items.length > 1 && ` 외 ${order.items.length - 1}건`}
                       </span>
                     ) : '-'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {order.shippingAddress ? (
+                      <div className="max-w-xs">
+                        <p className="font-medium">{order.shippingAddress.recipientName}</p>
+                        <p className="text-xs text-gray-500">{order.shippingAddress.phone}</p>
+                        <p className="text-xs text-gray-500 truncate" title={`${order.shippingAddress.address} ${order.shippingAddress.addressDetail || ''}`}>
+                          [{order.shippingAddress.zipCode}] {order.shippingAddress.address}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium">
                     {(order.totalAmount || order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0).toLocaleString()}원
